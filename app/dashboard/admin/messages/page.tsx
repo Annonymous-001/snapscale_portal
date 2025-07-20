@@ -1,57 +1,98 @@
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/lib/auth"
-import { redirect } from "next/navigation"
+"use client"
+
+import { useState, useEffect } from "react"
 import { DashboardHeader } from "@/components/dashboard/dashboard-header"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Reply, Plus } from "lucide-react"
+import { Reply, Plus, Trash2, Check } from "lucide-react"
+import { toast } from "sonner"
+import { z } from "zod"
 
-export default async function AdminMessagesPage() {
-  const session = await getServerSession(authOptions)
+const messageSchema = z.object({
+  content: z.string().min(1, "Message content is required"),
+  projectId: z.string().min(1, "Project is required"),
+  userId: z.string().min(1, "Recipient is required"),
+  priority: z.enum(["NORMAL", "HIGH"]).default("NORMAL"),
+})
 
-  if (!session || session.user.role !== "ADMIN") {
-    redirect("/auth/signin")
+export default function AdminMessagesPage() {
+  const [messages, setMessages] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [formOpen, setFormOpen] = useState(false)
+  const [formData, setFormData] = useState({ content: "", projectId: "", userId: "", priority: "NORMAL" })
+  const [formErrors, setFormErrors] = useState<any>({})
+  const [submitting, setSubmitting] = useState(false)
+
+  useEffect(() => {
+    loadMessages()
+  }, [])
+
+  const loadMessages = async () => {
+    setLoading(true)
+    try {
+      const res = await fetch("/api/messages")
+      if (!res.ok) throw new Error("Failed to fetch messages")
+      const data = await res.json()
+      setMessages(data ?? [])
+    } catch {
+      toast.error("Failed to load messages")
+    } finally {
+      setLoading(false)
+    }
   }
 
-  // TODO: Replace with server action to fetch all messages
-  const messages = [
-    {
-      id: "1",
-      content:
-        "Thank you for the project update. The progress looks great! I have a few questions about the user interface design.",
-      fromAdmin: false,
-      fromName: "John Smith (Client)",
-      toName: "Mike Chen (Manager)",
-      read: true,
-      priority: "NORMAL",
-      createdAt: "2024-01-15T10:30:00Z",
-      project: "Website Redesign",
-    },
-    {
-      id: "2",
-      content: "I've completed the wireframes and uploaded them to the project folder. Ready for review.",
-      fromAdmin: false,
-      fromName: "Sarah Johnson (Team)",
-      toName: "Mike Chen (Manager)",
-      read: false,
-      priority: "NORMAL",
-      createdAt: "2024-01-14T14:20:00Z",
-      project: "Mobile App Development",
-    },
-    {
-      id: "3",
-      content: "The authentication system is now complete. Moving on to the dashboard implementation.",
-      fromAdmin: false,
-      fromName: "Mike Chen (Manager)",
-      toName: "John Smith (Client)",
-      read: true,
-      priority: "HIGH",
-      createdAt: "2024-01-13T09:15:00Z",
-      project: "Website Redesign",
-    },
-  ]
+  const handleFormChange = (e: any) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value })
+  }
+
+  const handleCreateMessage = async (e: any) => {
+    e.preventDefault()
+    setFormErrors({})
+    try {
+      const parsed = messageSchema.parse(formData)
+      setSubmitting(true)
+      const fd = new FormData()
+      Object.entries(parsed).forEach(([k, v]) => fd.append(k, v))
+      const res = await fetch("/api/messages", { method: "POST", body: fd })
+      if (!res.ok) throw new Error("Failed to create message")
+      setFormOpen(false)
+      setFormData({ content: "", projectId: "", userId: "", priority: "NORMAL" })
+      await loadMessages()
+      toast.success("Message sent")
+    } catch (err: any) {
+      if (err instanceof z.ZodError) {
+        setFormErrors(err.flatten().fieldErrors)
+      } else {
+        toast.error(err.message || "Failed to create message")
+      }
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleMarkAsRead = async (id: string) => {
+    try {
+      const res = await fetch(`/api/messages?id=${id}`, { method: "PUT" })
+      if (!res.ok) throw new Error("Failed to mark as read")
+      await loadMessages()
+      toast.success("Marked as read")
+    } catch {
+      toast.error("Failed to mark as read")
+    }
+  }
+
+  const handleDelete = async (id: string) => {
+    try {
+      const res = await fetch(`/api/messages?id=${id}`, { method: "DELETE" })
+      if (!res.ok) throw new Error("Failed to delete message")
+      await loadMessages()
+      toast.success("Message deleted")
+    } catch {
+      toast.error("Failed to delete message")
+    }
+  }
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
@@ -59,51 +100,102 @@ export default async function AdminMessagesPage() {
 
       <div className="flex justify-between items-center">
         <p className="text-muted-foreground">Monitor all system communications</p>
-        <Button>
+        <Button onClick={() => setFormOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
           New Message
         </Button>
       </div>
 
+      {formOpen && (
+        <form onSubmit={handleCreateMessage} className="bg-white border rounded-lg p-4 mb-4 flex flex-col gap-3 max-w-lg">
+          <textarea
+            name="content"
+            value={formData.content}
+            onChange={handleFormChange}
+            placeholder="Message content"
+            className="border rounded p-2"
+            rows={3}
+          />
+          {formErrors.content && <span className="text-red-500 text-xs">{formErrors.content}</span>}
+          <input
+            name="projectId"
+            value={formData.projectId}
+            onChange={handleFormChange}
+            placeholder="Project ID"
+            className="border rounded p-2"
+          />
+          {formErrors.projectId && <span className="text-red-500 text-xs">{formErrors.projectId}</span>}
+          <input
+            name="userId"
+            value={formData.userId}
+            onChange={handleFormChange}
+            placeholder="Recipient User ID"
+            className="border rounded p-2"
+          />
+          {formErrors.userId && <span className="text-red-500 text-xs">{formErrors.userId}</span>}
+          <select name="priority" value={formData.priority} onChange={handleFormChange} className="border rounded p-2">
+            <option value="NORMAL">Normal</option>
+            <option value="HIGH">High</option>
+          </select>
+          <div className="flex gap-2 mt-2">
+            <Button type="submit" disabled={submitting}>
+              Send
+            </Button>
+            <Button type="button" variant="outline" onClick={() => setFormOpen(false)}>
+              Cancel
+            </Button>
+          </div>
+        </form>
+      )}
+
       <div className="grid gap-4">
-        {messages.map((message) => (
-          <Card key={message.id} className={!message.read ? "border-primary/50" : ""}>
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback>{message.fromName.charAt(0)}</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="font-medium">
-                      {message.fromName} → {message.toName}
-                    </p>
-                    <p className="text-sm text-muted-foreground">{message.project}</p>
+        {loading ? (
+          <div>Loading...</div>
+        ) : messages.length === 0 ? (
+          <div className="text-center text-muted-foreground">No messages found</div>
+        ) : (
+          messages.map((message) => (
+            <Card key={message.id} className={!message.read ? "border-primary/50" : ""}>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-8 w-8">
+                      <AvatarFallback>{message.fromName?.charAt(0) || "?"}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="font-medium">
+                        {message.fromName} → {message.toName}
+                      </p>
+                      <p className="text-sm text-muted-foreground">{message.project}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {!message.read && <Badge variant="default">Unread</Badge>}
+                    <Badge variant={message.priority === "HIGH" ? "destructive" : "outline"}>{message.priority}</Badge>
+                    <span className="text-sm text-muted-foreground">
+                      {new Date(message.createdAt).toLocaleDateString()}
+                    </span>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  {!message.read && <Badge variant="default">Unread</Badge>}
-                  <Badge variant={message.priority === "HIGH" ? "destructive" : "outline"}>{message.priority}</Badge>
-                  <span className="text-sm text-muted-foreground">
-                    {new Date(message.createdAt).toLocaleDateString()}
-                  </span>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm mb-4">{message.content}</p>
+                <div className="flex gap-2">
+                  {!message.read && (
+                    <Button variant="outline" size="sm" onClick={() => handleMarkAsRead(message.id)}>
+                      <Check className="h-4 w-4 mr-2" />
+                      Mark as Read
+                    </Button>
+                  )}
+                  <Button variant="destructive" size="sm" onClick={() => handleDelete(message.id)}>
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete
+                  </Button>
                 </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm mb-4">{message.content}</p>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm">
-                  <Reply className="h-4 w-4 mr-2" />
-                  Reply
-                </Button>
-                <Button variant="outline" size="sm">
-                  Mark as Read
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          ))
+        )}
       </div>
     </div>
   )

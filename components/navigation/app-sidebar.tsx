@@ -31,7 +31,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { signOut } from "next-auth/react"
-import type { Role } from "@prisma/client"
+import type { Role } from "@/lib/generated/prisma"
 import { ThemeToggle } from "@/components/theme-toggle"
 
 const navigationConfig = {

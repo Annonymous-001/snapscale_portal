@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Plus, Edit, Eye, Trash2 } from "lucide-react"
-import { getInvoices, createInvoice, updateInvoice, deleteInvoice } from "@/lib/actions/invoices"
 import { InvoiceForm } from "@/components/dashboard/invoice-form"
 import { DeleteInvoiceDialog } from "@/components/dashboard/delete-invoice-dialog"
 import { toast } from "sonner"
@@ -27,7 +26,9 @@ export default function AdminInvoicesPage() {
   const loadInvoices = async () => {
     try {
       setLoading(true)
-      const data = await getInvoices()
+      const res = await fetch("/api/invoices")
+      if (!res.ok) throw new Error("Failed to fetch invoices")
+      const data = await res.json()
       setInvoices(data ?? [])
     } catch (error) {
       toast.error("Failed to load invoices")
@@ -38,7 +39,11 @@ export default function AdminInvoicesPage() {
 
   const handleCreateInvoice = async (formData: FormData) => {
     try {
-      await createInvoice(formData)
+      const res = await fetch("/api/invoices", {
+        method: "POST",
+        body: formData,
+      })
+      if (!res.ok) throw new Error("Failed to create invoice")
       await loadInvoices()
     } catch (error) {
       throw error
@@ -48,7 +53,11 @@ export default function AdminInvoicesPage() {
   const handleUpdateInvoice = async (formData: FormData) => {
     if (!editingInvoice) return
     try {
-      await updateInvoice(editingInvoice.id, formData)
+      const res = await fetch(`/api/invoices?id=${editingInvoice.id}`, {
+        method: "PUT",
+        body: formData,
+      })
+      if (!res.ok) throw new Error("Failed to update invoice")
       await loadInvoices()
       setEditingInvoice(null)
     } catch (error) {
@@ -58,7 +67,10 @@ export default function AdminInvoicesPage() {
 
   const handleDeleteInvoice = async (invoiceId: string) => {
     try {
-      await deleteInvoice(invoiceId)
+      const res = await fetch(`/api/invoices?id=${invoiceId}`, {
+        method: "DELETE",
+      })
+      if (!res.ok) throw new Error("Failed to delete invoice")
       await loadInvoices()
     } catch (error) {
       throw error

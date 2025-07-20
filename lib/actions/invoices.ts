@@ -30,22 +30,22 @@ export async function getInvoices() {
   if (invoices.length > 0) {
     console.log("[getInvoices] first invoice:", invoices[0])
   }
-  return invoices.map(inv => ({
-    id: inv.id,
-    invoiceNumber: inv.invoiceNumber,
-    amount: inv.amount.toString(),
-    currency: inv.currency,
-    dueDate: inv.dueDate ? inv.dueDate.toISOString() : null,
-    paid: inv.paid,
-    paymentLink: inv.paymentLink,
-    receiptUrl: inv.receiptUrl,
-    status: inv.status,
-    notes: inv.notes,
-    client: inv.User ? { id: inv.User.id, name: inv.User.name } : null,
-    project: inv.Project ? { id: inv.Project.id, name: inv.Project.name } : null,
-    createdAt: inv.createdAt,
-    updatedAt: inv.updatedAt,
-    paidAt: inv.paidAt,
+  return invoices.map(invoice => ({
+    id: invoice.id,
+    invoiceNumber: invoice.invoiceNumber,
+    amount: invoice.amount.toString(),
+    currency: invoice.currency,
+    dueDate: invoice.dueDate ? invoice.dueDate.toISOString() : null,
+    paid: invoice.paid,
+    paymentLink: invoice.paymentLink,
+    receiptUrl: invoice.receiptUrl,
+    status: invoice.status,
+    notes: invoice.notes,
+    client: invoice.User ? { id: invoice.User.id, name: invoice.User.name } : null,
+    project: invoice.Project ? { id: invoice.Project.id, name: invoice.Project.name } : null,
+    createdAt: invoice.createdAt,
+    updatedAt: invoice.updatedAt,
+    paidAt: invoice.paidAt,
   }))
 }
 
