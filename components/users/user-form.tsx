@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -51,6 +51,18 @@ export function UserForm({ open, onOpenChange, user, onSubmit }: UserFormProps) 
       timezone: user?.timezone || "UTC",
     },
   })
+
+  // Add this useEffect to update form values when user changes
+  useEffect(() => {
+    form.reset({
+      name: user?.name || "",
+      email: user?.email || "",
+      password: "",
+      role: (user?.role as any) || "CLIENT",
+      phone: user?.phone || "",
+      timezone: user?.timezone || "UTC",
+    })
+  }, [user, form])
 
   const handleSubmit = async (data: UserFormData) => {
     try {

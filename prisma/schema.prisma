@@ -77,10 +77,16 @@ model Message {
   priority  MessagePriority @default(NORMAL)
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
-  userId    String
+  userId    String // recipient
+  fromUserId String? // sender (nullable for system/admin messages)
   projectId String
+  parentId  String? // for replies
+
   Project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  Recipient User     @relation("MessageRecipient", fields: [userId], references: [id], onDelete: Cascade)
+  FromUser  User?    @relation("MessageFromUser", fields: [fromUserId], references: [id], onDelete: SetNull)
+  Parent    Message? @relation("MessageParent", fields: [parentId], references: [id])
+  Replies   Message[] @relation("MessageParent")
 }
 
 model Project {
@@ -196,7 +202,6 @@ model User {
   Account                         Account[]
   File                            File[]
   Invoice                         Invoice[]
-  Message                         Message[]
   Project_Project_clientIdToUser  Project[]    @relation("Project_clientIdToUser")
   Project_Project_managerIdToUser Project[]    @relation("Project_managerIdToUser")
   Session                         Session[]
@@ -204,8 +209,10 @@ model User {
   Task_Task_createdByToUser       Task[]       @relation("Task_createdByToUser")
   TeamMember                      TeamMember[]
   Proposal                        Proposal[]
-
   Team Team[] @relation("TeamLead")
+
+  MessagesSent     Message[] @relation("MessageFromUser")
+  MessagesReceived Message[] @relation("MessageRecipient")
 }
 
 model VerificationToken {

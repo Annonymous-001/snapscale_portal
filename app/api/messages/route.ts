@@ -1,8 +1,22 @@
 import { NextResponse } from "next/server"
-import { getMessages, createMessage, markMessageAsRead, deleteMessage } from "@/lib/actions/messages"
+import { getMessages, createMessage, markMessageAsRead, deleteMessage, getUsersForMessaging, getProjectsForMessaging } from "@/lib/actions/messages"
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const url = new URL(request.url)
+    const type = url.searchParams.get("type")
+    const userId = url.searchParams.get("userId")
+    
+    if (type === "users") {
+      const users = await getUsersForMessaging()
+      return NextResponse.json(users)
+    }
+    
+    if (type === "projects") {
+      const projects = await getProjectsForMessaging(userId || undefined)
+      return NextResponse.json(projects)
+    }
+    
     const messages = await getMessages()
     return NextResponse.json(messages)
   } catch (error: any) {
