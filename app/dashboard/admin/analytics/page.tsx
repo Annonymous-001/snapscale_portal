@@ -1,123 +1,92 @@
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/lib/auth"
-import { redirect } from "next/navigation"
+"use client"
+
+import { useState, useEffect } from "react"
 import { DashboardHeader } from "@/components/dashboard/dashboard-header"
 import { StatsCard } from "@/components/dashboard/stats-card"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { TrendingUp, TrendingDown, Users, DollarSign, FolderOpen, Clock } from "lucide-react"
-import { prisma } from "@/lib/prisma"
+import { toast } from "sonner"
+import { Skeleton } from "@/components/ui/skeleton"
 
-export default async function AdminAnalyticsPage() {
-  const session = await getServerSession(authOptions)
+export default function AdminAnalyticsPage() {
+  const [analyticsData, setAnalyticsData] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
 
-  if (!session || session.user.role !== "ADMIN") {
-    redirect("/auth/signin")
+  useEffect(() => {
+    loadAnalytics()
+  }, [])
+
+  const loadAnalytics = async () => {
+    try {
+      setLoading(true)
+      const res = await fetch("/api/analytics")
+      if (!res.ok) throw new Error("Failed to fetch analytics")
+      const data = await res.json()
+      setAnalyticsData(data)
+    } catch (error) {
+      toast.error("Failed to load analytics")
+    } finally {
+      setLoading(false)
+    }
   }
 
-  // Fetch real analytics data
-  const [
-    totalRevenue,
-    activeProjects,
-    projectStatusDistribution,
-    monthlyRevenue,
-    teamUtilization,
-    avgProjectTime
-  ] = await Promise.all([
-    // Total revenue this year
-    prisma.invoice.aggregate({
-      where: { 
-        paid: true,
-        paidAt: {
-          gte: new Date(new Date().getFullYear(), 0, 1) // Start of current year
-        }
-      },
-      _sum: { amount: true }
-    }),
+  if (loading) {
+    return (
+      <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+        <DashboardHeader title="Analytics" breadcrumbs={[{ label: "Admin", href: "/dashboard/admin" }]} />
 
-    // Active projects count
-    prisma.project.count({
-      where: {
-        status: { in: ["PENDING", "IN_PROGRESS", "REVIEW"] }
-      }
-    }),
+        <div className="grid auto-rows-min gap-4 md:grid-cols-4">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="p-6 border rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <Skeleton className="h-8 w-8 rounded" />
+                <Skeleton className="h-4 w-24" />
+              </div>
+              <Skeleton className="h-8 w-16 mb-1" />
+              <Skeleton className="h-3 w-20" />
+            </div>
+          ))}
+        </div>
 
-    // Project status distribution
-    prisma.project.groupBy({
-      by: ['status'],
-      _count: { status: true }
-    }),
+        <div className="grid gap-4 md:grid-cols-2">
+          {[...Array(2)].map((_, i) => (
+            <Card key={i}>
+              <CardHeader>
+                <Skeleton className="h-6 w-32 mb-2" />
+                <Skeleton className="h-4 w-48" />
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {[...Array(6)].map((_, j) => (
+                    <div key={j} className="flex items-center justify-between">
+                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-4 w-16" />
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    )
+  }
 
-    // Monthly revenue for current year
-    prisma.$queryRaw<Array<{
-      month: string
-      amount: bigint
-    }>>`
-      SELECT 
-        TO_CHAR("paidAt", 'Month') as month,
-        SUM(amount) as amount
-      FROM "Invoice" 
-      WHERE "paid" = true 
-        AND "paidAt" >= DATE_TRUNC('year', CURRENT_DATE)
-      GROUP BY TO_CHAR("paidAt", 'Month')
-      ORDER BY MIN("paidAt")
-    `,
+  if (!analyticsData) {
+    return (
+      <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+        <DashboardHeader title="Analytics" breadcrumbs={[{ label: "Admin", href: "/dashboard/admin" }]} />
+        <Card>
+          <CardContent className="p-8 text-center">
+            <p className="text-muted-foreground">Failed to load analytics data</p>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
-    // Team utilization (active team members / total team members)
-    prisma.$queryRaw<Array<{
-      utilization: number
-    }>>`
-      SELECT 
-        ROUND(
-          (COUNT(CASE WHEN tm."isActive" = true THEN 1 END) * 100.0 / COUNT(*))
-        ) as utilization
-      FROM "TeamMember" tm
-    `,
-
-    // Average project completion time
-    prisma.$queryRaw<Array<{
-      avg_days: number
-    }>>`
-      SELECT 
-        ROUND(AVG(
-          EXTRACT(DAY FROM ("updatedAt" - "startDate"))
-        )) as avg_days
-      FROM "Project" 
-      WHERE "status" = 'COMPLETED' 
-        AND "startDate" IS NOT NULL
-    `
-  ])
-
-  const revenue = totalRevenue._sum.amount || 0
-  const utilization = teamUtilization[0]?.utilization || 0
-  const avgDays = avgProjectTime[0]?.avg_days || 0
-
-  // Calculate project status percentages
-  const totalProjects = projectStatusDistribution.reduce((sum, item) => sum + item._count.status, 0)
-  const statusData = projectStatusDistribution.map(item => ({
-    status: item.status,
-    count: item._count.status,
-    percentage: totalProjects > 0 ? Math.round((item._count.status / totalProjects) * 100) : 0,
-    color: item.status === 'IN_PROGRESS' ? 'bg-blue-500' :
-           item.status === 'PENDING' ? 'bg-yellow-500' :
-           item.status === 'REVIEW' ? 'bg-purple-500' :
-           'bg-green-500'
-  }))
-
-  // Process monthly revenue data
-  const maxRevenue = Math.max(...monthlyRevenue.map(m => Number(m.amount)), 1)
-  const monthlyData = monthlyRevenue.map((month, index) => {
-    const prevAmount = index > 0 ? Number(monthlyRevenue[index - 1].amount) : 0
-    const currentAmount = Number(month.amount)
-    const growth = prevAmount > 0 ? Math.round(((currentAmount - prevAmount) / prevAmount) * 100) : 0
-    
-    return {
-      month: month.month.trim(),
-      amount: currentAmount,
-      growth,
-      percentage: (currentAmount / maxRevenue) * 100
-    }
-  })
+  const { revenue, activeProjects, utilization, avgDays, monthlyData, statusData } = analyticsData
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
@@ -163,7 +132,7 @@ export default async function AdminAnalyticsPage() {
           <CardContent>
             <div className="space-y-4">
               {monthlyData.length > 0 ? (
-                monthlyData.map((data, index) => (
+                monthlyData.map((data: any, index: number) => (
                   <div key={index} className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-16 text-sm font-medium">{data.month}</div>
@@ -197,7 +166,7 @@ export default async function AdminAnalyticsPage() {
           <CardContent>
             <div className="space-y-4">
               {statusData.length > 0 ? (
-                statusData.map((data, index) => (
+                statusData.map((data: any, index: number) => (
                   <div key={index} className="space-y-2">
                     <div className="flex items-center justify-between text-sm">
                       <div className="flex items-center gap-2">
