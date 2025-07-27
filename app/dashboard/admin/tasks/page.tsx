@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Plus, Edit, Eye, Trash2 } from "lucide-react"
-import { getTasks, createTask, updateTask, deleteTask } from "@/lib/actions/tasks"
 import { TaskForm } from "@/components/dashboard/task-form"
 import { DeleteTaskDialog } from "@/components/dashboard/delete-task-dialog"
 import { toast } from "sonner"
@@ -28,7 +27,9 @@ export default function AdminTasksPage() {
   const loadTasks = async () => {
     try {
       setLoading(true)
-      const data = await getTasks()
+      const res = await fetch("/api/tasks")
+      if (!res.ok) throw new Error("Failed to fetch tasks")
+      const data = await res.json()
       setTasks(data ?? [])
     } catch (error) {
       toast.error("Failed to load tasks")
@@ -39,7 +40,11 @@ export default function AdminTasksPage() {
 
   const handleCreateTask = async (formData: FormData) => {
     try {
-      await createTask(formData)
+      const res = await fetch("/api/tasks", {
+        method: "POST",
+        body: formData,
+      })
+      if (!res.ok) throw new Error("Failed to create task")
       await loadTasks()
     } catch (error) {
       throw error
@@ -49,7 +54,11 @@ export default function AdminTasksPage() {
   const handleUpdateTask = async (formData: FormData) => {
     if (!editingTask) return
     try {
-      await updateTask(editingTask.id, formData)
+      const res = await fetch(`/api/tasks?id=${editingTask.id}`, {
+        method: "PUT",
+        body: formData,
+      })
+      if (!res.ok) throw new Error("Failed to update task")
       await loadTasks()
       setEditingTask(null)
     } catch (error) {
@@ -59,7 +68,10 @@ export default function AdminTasksPage() {
 
   const handleDeleteTask = async (taskId: string) => {
     try {
-      await deleteTask(taskId)
+      const res = await fetch(`/api/tasks?id=${taskId}`, {
+        method: "DELETE",
+      })
+      if (!res.ok) throw new Error("Failed to delete task")
       await loadTasks()
     } catch (error) {
       throw error

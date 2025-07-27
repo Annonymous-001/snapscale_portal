@@ -10,7 +10,6 @@ import { Plus, Eye, Edit, Trash2, Search } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { ProjectForm } from "@/components/projects/project-form"
 import { DeleteProjectDialog } from "@/components/projects/delete-project-dialog"
-import { getProjects, createProject, updateProject, deleteProject, getProjectFormOptions } from "@/lib/actions/projects"
 import { toast } from "sonner"
 import { Skeleton } from "@/components/ui/skeleton"
 
@@ -32,7 +31,9 @@ export default function AdminProjectsPage() {
   const loadProjects = async () => {
     try {
       setLoading(true)
-      const data = await getProjects()
+      const res = await fetch("/api/projects")
+      if (!res.ok) throw new Error("Failed to fetch projects")
+      const data = await res.json()
       setProjects(data ?? [])
     } catch (error) {
       toast.error("Failed to load projects")
@@ -43,7 +44,9 @@ export default function AdminProjectsPage() {
 
   const loadFormOptions = async () => {
     try {
-      const opts = await getProjectFormOptions()
+      const res = await fetch("/api/projects/options")
+      if (!res.ok) throw new Error("Failed to fetch form options")
+      const opts = await res.json()
       setFormOptions(opts)
     } catch (error) {
       toast.error("Failed to load form options")
@@ -52,7 +55,11 @@ export default function AdminProjectsPage() {
 
   const handleCreateProject = async (formData: FormData) => {
     try {
-      await createProject(formData)
+      const res = await fetch("/api/projects", {
+        method: "POST",
+        body: formData,
+      })
+      if (!res.ok) throw new Error("Failed to create project")
       await loadProjects()
     } catch (error) {
       throw error
@@ -62,7 +69,11 @@ export default function AdminProjectsPage() {
   const handleUpdateProject = async (formData: FormData) => {
     if (!editingProject) return
     try {
-      await updateProject(editingProject.id, formData)
+      const res = await fetch(`/api/projects?id=${editingProject.id}`, {
+        method: "PUT",
+        body: formData,
+      })
+      if (!res.ok) throw new Error("Failed to update project")
       await loadProjects()
       setEditingProject(null)
     } catch (error) {
@@ -72,7 +83,10 @@ export default function AdminProjectsPage() {
 
   const handleDeleteProject = async (projectId: string) => {
     try {
-      await deleteProject(projectId)
+      const res = await fetch(`/api/projects?id=${projectId}`, {
+        method: "DELETE",
+      })
+      if (!res.ok) throw new Error("Failed to delete project")
       await loadProjects()
     } catch (error) {
       throw error

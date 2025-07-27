@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Plus, Edit, Users, UserPlus } from "lucide-react"
-import { getTeams, createTeam, updateTeam, deleteTeam } from "@/lib/actions/teams"
 import { TeamForm } from "@/components/dashboard/team-form"
 import { DeleteTeamDialog } from "@/components/dashboard/delete-team-dialog"
 import { toast } from "sonner"
@@ -28,7 +27,9 @@ export default function AdminTeamsPage() {
   const loadTeams = async () => {
     try {
       setLoading(true)
-      const data = await getTeams()
+      const res = await fetch("/api/teams")
+      if (!res.ok) throw new Error("Failed to fetch teams")
+      const data = await res.json()
       setTeams(data ?? [])
     } catch (error) {
       toast.error("Failed to load teams")
@@ -39,7 +40,11 @@ export default function AdminTeamsPage() {
 
   const handleCreateTeam = async (formData: FormData) => {
     try {
-      await createTeam(formData)
+      const res = await fetch("/api/teams", {
+        method: "POST",
+        body: formData,
+      })
+      if (!res.ok) throw new Error("Failed to create team")
       await loadTeams()
     } catch (error) {
       throw error
@@ -49,7 +54,11 @@ export default function AdminTeamsPage() {
   const handleUpdateTeam = async (formData: FormData) => {
     if (!editingTeam) return
     try {
-      await updateTeam(editingTeam.id, formData)
+      const res = await fetch(`/api/teams?id=${editingTeam.id}`, {
+        method: "PUT",
+        body: formData,
+      })
+      if (!res.ok) throw new Error("Failed to update team")
       await loadTeams()
       setEditingTeam(null)
     } catch (error) {
@@ -59,7 +68,10 @@ export default function AdminTeamsPage() {
 
   const handleDeleteTeam = async (teamId: string) => {
     try {
-      await deleteTeam(teamId)
+      const res = await fetch(`/api/teams?id=${teamId}`, {
+        method: "DELETE",
+      })
+      if (!res.ok) throw new Error("Failed to delete team")
       await loadTeams()
     } catch (error) {
       throw error

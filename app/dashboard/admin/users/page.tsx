@@ -2,39 +2,25 @@
 
 import { useState, useEffect } from "react"
 import { DashboardHeader } from "@/components/dashboard/dashboard-header"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Plus, Edit, Trash2, UserCheck, UserX, Search } from "lucide-react"
+import { Plus, Edit, Eye, Trash2, Search } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { UserForm } from "@/components/users/user-form"
 import { DeleteUserDialog } from "@/components/users/delete-user-dialog"
-import { getUsers, createUser, updateUser, toggleUserStatus, deleteUser } from "@/lib/actions/users"
 import { toast } from "sonner"
 import { Skeleton } from "@/components/ui/skeleton"
 
-interface User {
-  id: string
-  name: string | null
-  email: string
-  role: string
-  isActive: boolean
-  lastLoginAt: Date | null
-  createdAt: Date
-  phone: string | null
-  timezone: string
-  projectsCount: number
-}
-
 export default function AdminUsersPage() {
-  const [users, setUsers] = useState<User[]>([])
+  const [users, setUsers] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [formOpen, setFormOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [selectedUser, setSelectedUser] = useState<User | null>(null)
-  const [editingUser, setEditingUser] = useState<User | null>(null)
+  const [selectedUser, setSelectedUser] = useState<any | null>(null)
+  const [editingUser, setEditingUser] = useState<any | null>(null)
 
   useEffect(() => {
     loadUsers()
@@ -43,8 +29,10 @@ export default function AdminUsersPage() {
   const loadUsers = async () => {
     try {
       setLoading(true)
-      const data = await getUsers()
-      setUsers(data as User[])
+      const res = await fetch("/api/users")
+      if (!res.ok) throw new Error("Failed to fetch users")
+      const data = await res.json()
+      setUsers(data ?? [])
     } catch (error) {
       toast.error("Failed to load users")
     } finally {
@@ -54,7 +42,11 @@ export default function AdminUsersPage() {
 
   const handleCreateUser = async (formData: FormData) => {
     try {
-      await createUser(formData)
+      const res = await fetch("/api/users", {
+        method: "POST",
+        body: formData,
+      })
+      if (!res.ok) throw new Error("Failed to create user")
       await loadUsers()
     } catch (error) {
       throw error
@@ -64,7 +56,11 @@ export default function AdminUsersPage() {
   const handleUpdateUser = async (formData: FormData) => {
     if (!editingUser) return
     try {
-      await updateUser(editingUser.id, formData)
+      const res = await fetch(`/api/users?id=${editingUser.id}`, {
+        method: "PUT",
+        body: formData,
+      })
+      if (!res.ok) throw new Error("Failed to update user")
       await loadUsers()
       setEditingUser(null)
     } catch (error) {
@@ -72,43 +68,36 @@ export default function AdminUsersPage() {
     }
   }
 
-  const handleToggleStatus = async (userId: string) => {
-    try {
-      await toggleUserStatus(userId)
-      await loadUsers()
-      toast.success("User status updated")
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to update user status")
-    }
-  }
-
   const handleDeleteUser = async (userId: string) => {
     try {
-      await deleteUser(userId)
+      const res = await fetch(`/api/users?id=${userId}`, {
+        method: "DELETE",
+      })
+      if (!res.ok) throw new Error("Failed to delete user")
       await loadUsers()
     } catch (error) {
       throw error
     }
   }
 
-  const filteredUsers = users.filter(user =>
+  const filteredUsers = users.filter((user) =>
     user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.role.toLowerCase().includes(searchTerm.toLowerCase())
+    user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.role?.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  const getRoleColor = (role: string) => {
+  const getRoleVariant = (role: string) => {
     switch (role) {
       case "ADMIN":
-        return "bg-red-100 text-red-800"
+        return "destructive"
       case "PROJECT_MANAGER":
-        return "bg-yellow-100 text-yellow-800"
+        return "secondary"
       case "TEAM_MEMBER":
-        return "bg-green-100 text-green-800"
+        return "default"
       case "CLIENT":
-        return "bg-blue-100 text-blue-800"
+        return "outline"
       default:
-        return "bg-gray-100 text-gray-800"
+        return "outline"
     }
   }
 
@@ -116,7 +105,6 @@ export default function AdminUsersPage() {
     return (
       <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
         <DashboardHeader title="Users" breadcrumbs={[{ label: "Admin", href: "/dashboard/admin" }]} />
-
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-4 flex-1 max-w-sm">
             <div className="relative">
@@ -126,35 +114,35 @@ export default function AdminUsersPage() {
           </div>
           <Button disabled>
             <Plus className="h-4 w-4 mr-2" />
-            Add User
+            New User
           </Button>
         </div>
-
         <div className="grid gap-4">
           {[...Array(4)].map((_, i) => (
             <Card key={i}>
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <Skeleton className="h-12 w-12 rounded-full" />
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="h-10 w-10 rounded-full" />
                     <div>
-                      <Skeleton className="h-6 w-32 mb-2" />
-                      <Skeleton className="h-4 w-40 mb-2" />
-                      <div className="flex items-center gap-2 mt-1">
-                        <Skeleton className="h-5 w-20 rounded" />
-                        <Skeleton className="h-5 w-16 rounded" />
-                      </div>
+                      <Skeleton className="h-5 w-32 mb-1" />
+                      <Skeleton className="h-4 w-24" />
                     </div>
                   </div>
-                  <div className="text-right space-y-1">
-                    <Skeleton className="h-4 w-24 mb-1" />
-                    <Skeleton className="h-4 w-28 mb-1" />
-                    <Skeleton className="h-4 w-20" />
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-5 w-20 rounded" />
+                    <Skeleton className="h-5 w-16 rounded" />
                   </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4 text-sm mt-4">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-4 w-24" />
                 </div>
                 <div className="flex gap-2 mt-4">
                   <Skeleton className="h-8 w-20 rounded" />
-                  <Skeleton className="h-8 w-28 rounded" />
+                  <Skeleton className="h-8 w-20 rounded" />
                   <Skeleton className="h-8 w-20 rounded" />
                 </div>
               </CardContent>
@@ -168,7 +156,6 @@ export default function AdminUsersPage() {
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
       <DashboardHeader title="Users" breadcrumbs={[{ label: "Admin", href: "/dashboard/admin" }]} />
-
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-4 flex-1 max-w-sm">
           <div className="relative">
@@ -183,10 +170,9 @@ export default function AdminUsersPage() {
         </div>
         <Button onClick={() => setFormOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
-          Add User
+          New User
         </Button>
       </div>
-
       <div className="grid gap-4">
         {filteredUsers.length === 0 ? (
           <Card>
@@ -199,89 +185,81 @@ export default function AdminUsersPage() {
         ) : (
           filteredUsers.map((user) => (
             <Card key={user.id}>
-              <CardContent className="p-6">
+              <CardHeader>
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <Avatar className="h-12 w-12">
-                      <AvatarFallback>
-                        {user.name
-                          ? user.name
-                              .split(" ")
-                              .map((n) => n[0])
-                              .join("")
-                          : "?"}
-                      </AvatarFallback>
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-10 w-10">
+                      <AvatarFallback>{user.avatar}</AvatarFallback>
                     </Avatar>
                     <div>
-                      <h3 className="font-semibold text-lg">{user.name || "N/A"}</h3>
-                      <p className="text-muted-foreground">{user.email}</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Badge variant="outline" className={getRoleColor(user.role)}>
-                          {user.role.replace("_", " ")}
-                        </Badge>
-                        <Badge variant={user.isActive ? "default" : "secondary"}>
-                          {user.isActive ? "Active" : "Inactive"}
-                        </Badge>
-                      </div>
+                      <CardTitle className="text-lg">{user.name}</CardTitle>
+                      <CardDescription>{user.email}</CardDescription>
                     </div>
                   </div>
-
-                  <div className="text-right">
-                    <div className="text-sm text-muted-foreground space-y-1">
-                      <p>Projects: {user.projectsCount}</p>
-                      <p>Last login: {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString() : "Never"}</p>
-                      <p>Joined: {new Date(user.createdAt).toLocaleDateString()}</p>
-                    </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={getRoleVariant(user.role)}>
+                      {user.role?.replace("_", " ")}
+                    </Badge>
+                    <Badge variant={user.isActive ? "default" : "secondary"}>
+                      {user.isActive ? "Active" : "Inactive"}
+                    </Badge>
                   </div>
                 </div>
-
-                <div className="flex gap-2 mt-4">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => {
-                      setEditingUser(user)
-                      setFormOpen(true)
-                    }}
-                  >
-                    <Edit className="h-4 w-4 mr-2" />
-                    Edit
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => handleToggleStatus(user.id)}
-                  >
-                    {user.isActive ? (
-                      <>
-                        <UserX className="h-4 w-4 mr-2" />
-                        Deactivate
-                      </>
-                    ) : (
-                      <>
-                        <UserCheck className="h-4 w-4 mr-2" />
-                        Activate
-                      </>
-                    )}
-                  </Button>
-                  <Button 
-                    variant="destructive" 
-                    size="sm"
-                    onClick={() => {
-                      setSelectedUser(user)
-                      setDeleteDialogOpen(true)
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete
-                  </Button>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <p className="text-muted-foreground">Phone</p>
+                      <p className="font-medium">{user.phone || "-"}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Location</p>
+                      <p className="font-medium">{user.location || "-"}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Joined</p>
+                      <p className="font-medium">{user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "-"}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Last Login</p>
+                      <p className="font-medium">{user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString() : "-"}</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm">
+                      <Eye className="h-4 w-4 mr-2" />
+                      View
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setEditingUser(user)
+                        setFormOpen(true)
+                      }}
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedUser(user)
+                        setDeleteDialogOpen(true)
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
           ))
         )}
       </div>
-
       <UserForm
         open={formOpen}
         onOpenChange={(open) => {
@@ -293,7 +271,6 @@ export default function AdminUsersPage() {
         user={editingUser || undefined}
         onSubmit={editingUser ? handleUpdateUser : handleCreateUser}
       />
-
       {selectedUser && (
         <DeleteUserDialog
           open={deleteDialogOpen}
