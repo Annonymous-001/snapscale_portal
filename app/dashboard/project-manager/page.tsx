@@ -1,19 +1,97 @@
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/lib/auth"
-import { redirect } from "next/navigation"
+"use client"
+
+import { useState, useEffect } from "react"
 import { DashboardHeader } from "@/components/dashboard/dashboard-header"
 import { StatsCard } from "@/components/dashboard/stats-card"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { FolderOpen, Users, CheckSquare, DollarSign, TrendingUp, AlertTriangle } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
+import { toast } from "sonner"
+import { Skeleton } from "@/components/ui/skeleton"
 
-export default async function ProjectManagerDashboard() {
-  const session = await getServerSession(authOptions)
+export default function ProjectManagerDashboard() {
+  const [dashboardData, setDashboardData] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
 
-  if (!session || session.user.role !== "PROJECT_MANAGER") {
-    redirect("/auth/signin")
+  useEffect(() => {
+    loadDashboardData()
+  }, [])
+
+  const loadDashboardData = async () => {
+    try {
+      setLoading(true)
+      const res = await fetch("/api/project-manager/dashboard")
+      if (!res.ok) throw new Error("Failed to fetch dashboard data")
+      const data = await res.json()
+      setDashboardData(data)
+    } catch (error) {
+      toast.error("Failed to load dashboard data")
+    } finally {
+      setLoading(false)
+    }
   }
+
+  if (loading) {
+    return (
+      <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+        <DashboardHeader title="Dashboard" breadcrumbs={[{ label: "Project Manager" }]} />
+
+        <div className="grid auto-rows-min gap-4 md:grid-cols-4">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="p-6 border rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <Skeleton className="h-8 w-8 rounded" />
+                <Skeleton className="h-4 w-24" />
+              </div>
+              <Skeleton className="h-8 w-16 mb-1" />
+              <Skeleton className="h-3 w-20" />
+            </div>
+          ))}
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          {[...Array(2)].map((_, i) => (
+            <Card key={i}>
+              <CardHeader>
+                <Skeleton className="h-6 w-32 mb-2" />
+                <Skeleton className="h-4 w-48" />
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {[...Array(3)].map((_, j) => (
+                    <div key={j} className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Skeleton className="h-4 w-32" />
+                        <Skeleton className="h-5 w-20 rounded" />
+                      </div>
+                      <Skeleton className="h-2 w-full" />
+                      <Skeleton className="h-3 w-40" />
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  if (!dashboardData) {
+    return (
+      <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+        <DashboardHeader title="Dashboard" breadcrumbs={[{ label: "Project Manager" }]} />
+        <Card>
+          <CardContent className="p-8 text-center">
+            <p className="text-muted-foreground">Failed to load dashboard data</p>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  const { stats, projects, teamPerformance } = dashboardData
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
@@ -22,19 +100,29 @@ export default async function ProjectManagerDashboard() {
       <div className="grid auto-rows-min gap-4 md:grid-cols-4">
         <StatsCard
           title="Active Projects"
-          value={8}
+          value={stats.activeProjects}
           description="Projects in progress"
           icon={FolderOpen}
-          trend={{ value: 15, isPositive: true }}
+          trend={{ value: stats.projectGrowth, isPositive: stats.projectGrowth > 0 }}
         />
-        <StatsCard title="Team Members" value={12} description="Active team members" icon={Users} />
-        <StatsCard title="Pending Tasks" value={24} description="Tasks awaiting assignment" icon={CheckSquare} />
+        <StatsCard 
+          title="Team Members" 
+          value={stats.teamMembers} 
+          description="Active team members" 
+          icon={Users} 
+        />
+        <StatsCard 
+          title="Pending Tasks" 
+          value={stats.pendingTasks} 
+          description="Tasks awaiting assignment" 
+          icon={CheckSquare} 
+        />
         <StatsCard
           title="Revenue"
-          value="$45,230"
+          value={`$${stats.revenue.toLocaleString()}`}
           description="This month"
           icon={DollarSign}
-          trend={{ value: 8, isPositive: true }}
+          trend={{ value: stats.revenueGrowth, isPositive: stats.revenueGrowth > 0 }}
         />
       </div>
 
@@ -46,30 +134,31 @@ export default async function ProjectManagerDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-medium">Website Redesign</p>
-                  <Badge variant="secondary">In Progress</Badge>
+              {projects.length > 0 ? (
+                projects.map((project: any) => (
+                  <div key={project.id} className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium">{project.name}</p>
+                      <Badge variant={
+                        project.status === "IN_PROGRESS" ? "secondary" :
+                        project.status === "REVIEW" ? "outline" :
+                        project.status === "COMPLETED" ? "default" :
+                        "destructive"
+                      }>
+                        {project.status.replace("_", " ")}
+                      </Badge>
+                    </div>
+                    <Progress value={project.progress} className="h-2" />
+                    <p className="text-xs text-muted-foreground">
+                      {project.progress}% complete • {project.dueInfo}
+                    </p>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center text-muted-foreground py-4">
+                  No projects found
                 </div>
-                <Progress value={75} className="h-2" />
-                <p className="text-xs text-muted-foreground">75% complete • Due in 2 weeks</p>
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-medium">Mobile App Development</p>
-                  <Badge variant="outline">Review</Badge>
-                </div>
-                <Progress value={90} className="h-2" />
-                <p className="text-xs text-muted-foreground">90% complete • Due in 5 days</p>
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-medium">E-commerce Platform</p>
-                  <Badge variant="destructive">Delayed</Badge>
-                </div>
-                <Progress value={45} className="h-2" />
-                <p className="text-xs text-muted-foreground">45% complete • Overdue by 3 days</p>
-              </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -81,51 +170,39 @@ export default async function ProjectManagerDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
-                    <TrendingUp className="h-4 w-4 text-green-600" />
+              {teamPerformance.length > 0 ? (
+                teamPerformance.map((member: any, index: number) => (
+                  <div key={index} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className={`h-8 w-8 rounded-full flex items-center justify-center ${
+                        member.completionRate >= 90 ? "bg-green-100" :
+                        member.completionRate >= 75 ? "bg-blue-100" :
+                        "bg-yellow-100"
+                      }`}>
+                        {member.completionRate >= 90 ? (
+                          <TrendingUp className="h-4 w-4 text-green-600" />
+                        ) : member.completionRate >= 75 ? (
+                          <TrendingUp className="h-4 w-4 text-blue-600" />
+                        ) : (
+                          <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">{member.name}</p>
+                        <p className="text-xs text-muted-foreground">{member.role}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-medium">{member.completionRate}%</p>
+                      <p className="text-xs text-muted-foreground">{member.completedTasks}/{member.totalTasks} tasks</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium">Sarah Johnson</p>
-                    <p className="text-xs text-muted-foreground">Frontend Developer</p>
-                  </div>
+                ))
+              ) : (
+                <div className="text-center text-muted-foreground py-4">
+                  No team performance data available
                 </div>
-                <div className="text-right">
-                  <p className="text-sm font-medium">95%</p>
-                  <p className="text-xs text-muted-foreground">12/12 tasks</p>
-                </div>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
-                    <TrendingUp className="h-4 w-4 text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">Mike Chen</p>
-                    <p className="text-xs text-muted-foreground">Backend Developer</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-medium">87%</p>
-                  <p className="text-xs text-muted-foreground">8/9 tasks</p>
-                </div>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="h-8 w-8 rounded-full bg-yellow-100 flex items-center justify-center">
-                    <AlertTriangle className="h-4 w-4 text-yellow-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">Alex Rivera</p>
-                    <p className="text-xs text-muted-foreground">UI/UX Designer</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-medium">72%</p>
-                  <p className="text-xs text-muted-foreground">5/7 tasks</p>
-                </div>
-              </div>
+              )}
             </div>
           </CardContent>
         </Card>

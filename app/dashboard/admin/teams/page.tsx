@@ -5,7 +5,7 @@ import { DashboardHeader } from "@/components/dashboard/dashboard-header"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Plus, Edit, Users, UserPlus } from "lucide-react"
 import { TeamForm } from "@/components/dashboard/team-form"
 import { DeleteTeamDialog } from "@/components/dashboard/delete-team-dialog"
@@ -182,7 +182,7 @@ export default function AdminTeamsPage() {
                     <p className="text-muted-foreground text-sm mb-2">Team Lead</p>
                     <div className="flex items-center gap-2">
                       <Avatar className="h-8 w-8">
-                        <AvatarFallback>{team.lead?.avatar}</AvatarFallback>
+                        <AvatarImage src={team.lead?.avatar || "/placeholder-user.jpg"} alt={team.lead?.name} />
                       </Avatar>
                       <span className="font-medium">{team.lead?.name || "-"}</span>
                     </div>
@@ -192,7 +192,7 @@ export default function AdminTeamsPage() {
                     <div className="flex -space-x-2">
                       {team.members.slice(0, 4).map((member: any, index: number) => (
                         <Avatar key={index} className="h-8 w-8 border-2 border-background">
-                          <AvatarFallback className="text-xs">{member.avatar}</AvatarFallback>
+                          <AvatarImage src={member.avatar || "/placeholder-user.jpg"} alt={member.name} />
                         </Avatar>
                       ))}
                       {team.memberCount > 4 && (

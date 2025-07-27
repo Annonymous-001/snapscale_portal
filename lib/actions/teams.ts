@@ -37,11 +37,11 @@ export async function getTeams() {
     activeProjects: team.Project.filter(p => p.status !== "COMPLETED" && p.status !== "ARCHIVED" && p.status !== "CANCELLED").length,
     lead: team.TeamMember.find(m => m.role === "LEAD") ? {
       name: team.TeamMember.find(m => m.role === "LEAD")?.User?.name || "",
-      avatar: team.TeamMember.find(m => m.role === "LEAD")?.User?.name?.split(" ").map(n => n[0]).join("") || "-"
+      avatar: team.TeamMember.find(m => m.role === "LEAD")?.User?.avatar || null
     } : null,
     members: team.TeamMember.map(m => ({
       name: m.User?.name || "",
-      avatar: m.User?.name?.split(" ").map(n => n[0]).join("") || "-"
+      avatar: m.User?.avatar || null
     })),
   }))
 }

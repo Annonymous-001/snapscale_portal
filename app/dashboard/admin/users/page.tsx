@@ -5,7 +5,7 @@ import { DashboardHeader } from "@/components/dashboard/dashboard-header"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Plus, Edit, Eye, Trash2, Search } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { UserForm } from "@/components/users/user-form"
@@ -101,6 +101,15 @@ export default function AdminUsersPage() {
     }
   }
 
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2)
+  }
+
   if (loading) {
     return (
       <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
@@ -189,7 +198,8 @@ export default function AdminUsersPage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <Avatar className="h-10 w-10">
-                      <AvatarFallback>{user.avatar}</AvatarFallback>
+                      <AvatarImage src={user.avatar || "/placeholder-user.jpg"} alt={user.name} />
+                      <AvatarFallback>{user.name ? getInitials(user.name) : "U"}</AvatarFallback>
                     </Avatar>
                     <div>
                       <CardTitle className="text-lg">{user.name}</CardTitle>
