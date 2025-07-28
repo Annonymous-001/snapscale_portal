@@ -1,0 +1,11 @@
+# Task ID: 11
+# Title: Add Proposal Management
+# Status: pending
+# Dependencies: 3 (Not found), 9 (Not found)
+# Priority: low
+# Description: Implement proposal creation, management, and client approval workflow
+# Details:
+Create proposal templates, proposal generation, client approval workflow, and proposal tracking. Implement proposal-to-project conversion.
+
+# Test Strategy:
+Test proposal creation, client approval, and conversion to projects.

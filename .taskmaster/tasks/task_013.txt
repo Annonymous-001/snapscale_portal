@@ -1,0 +1,11 @@
+# Task ID: 13
+# Title: Add Real-time Notifications
+# Status: pending
+# Dependencies: 7 (Not found)
+# Priority: low
+# Description: Implement real-time notifications for project updates, messages, and system events
+# Details:
+Create real-time notification system using WebSockets or polling, notification preferences, and notification history. Implement email notifications.
+
+# Test Strategy:
+Test real-time notifications, notification preferences, and email delivery.

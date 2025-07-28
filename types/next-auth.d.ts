@@ -7,16 +7,19 @@ declare module "next-auth" {
       email: string
       name?: string | null
       role: Role
+      isActive: boolean
     }
   }
 
   interface User {
     role: Role
+    isActive: boolean
   }
 }
 
 declare module "next-auth/jwt" {
   interface JWT {
     role: Role
+    isActive: boolean
   }
 }

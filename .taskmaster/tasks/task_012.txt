@@ -1,0 +1,11 @@
+# Task ID: 12
+# Title: Implement Advanced Project Features
+# Status: pending
+# Dependencies: 3 (Not found), 4 (Not found)
+# Priority: low
+# Description: Add advanced project management features like milestones, dependencies, and templates
+# Details:
+Implement project milestones, task dependencies, project templates, workflow automation, and advanced project analytics.
+
+# Test Strategy:
+Test milestone tracking, dependencies, templates, and workflow automation.

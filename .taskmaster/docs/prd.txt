@@ -1,0 +1,226 @@
+<context>
+# Overview  
+The Agency Management System is a comprehensive web application designed to streamline operations for creative agencies, digital marketing firms, and consulting businesses. It solves the critical problem of fragmented project management, client communication, and financial tracking by providing a unified platform where agencies can manage projects, teams, clients, invoices, and communications all in one place.
+
+The system serves multiple user roles including clients, team members, project managers, and administrators, each with tailored dashboards and permissions. It's built using Next.js 14 with TypeScript, Prisma ORM, PostgreSQL database, and NextAuth for authentication.
+
+# Core Features  
+## Multi-Role User Management
+- Role-based access control (Client, Team Member, Project Manager, Admin)
+- User authentication and authorization with NextAuth
+- Profile management and role-specific dashboards
+- Secure session management
+
+## Project Management
+- Create, edit, and track projects with status updates
+- Project assignment to teams and team members
+- Budget tracking and financial management
+- File upload and document management
+- Project timeline and milestone tracking
+- Priority levels and due date management
+
+## Team Collaboration
+- Team creation and member management
+- Role-based team permissions (Team Member, Project Manager)
+- Task assignment and tracking within projects
+- Team member performance monitoring
+- Collaborative workspace features
+
+## Client Management
+- Client portal with project visibility
+- Client-specific dashboard and project access
+- Secure client communication channels
+- Invoice and payment tracking for clients
+- Proposal management and approval workflows
+
+## Financial Management
+- Invoice generation and management
+- Payment tracking and status updates
+- Budget allocation and monitoring
+- Financial reporting and analytics
+- Receipt and payment link management
+
+## Communication System
+- Internal messaging between team members
+- Client communication channels
+- Message threading and reply functionality
+- Priority-based messaging system
+- Read/unread status tracking
+
+## Analytics and Reporting
+- Project performance metrics
+- Team productivity analytics
+- Financial reporting and insights
+- Client satisfaction tracking
+- Custom dashboard widgets
+
+# User Experience  
+## User Personas
+- **Admin**: Full system access, user management, analytics, financial oversight
+- **Project Manager**: Project oversight, team management, client communication, task assignment
+- **Team Member**: Task execution, project collaboration, file management, communication
+- **Client**: Project visibility, communication, invoice viewing, proposal review
+
+## Key User Flows
+1. **Project Creation Flow**: Admin/PM creates project → assigns team → sets budget → creates tasks
+2. **Task Management Flow**: PM assigns tasks → Team members update progress → PM reviews and approves
+3. **Client Communication Flow**: Client sends message → PM responds → Team collaborates → Client receives updates
+4. **Invoice Management Flow**: PM generates invoice → Client receives notification → Payment processing → Status updates
+
+## UI/UX Considerations
+- Responsive design for desktop and mobile access
+- Intuitive navigation with role-based menus
+- Real-time notifications and updates
+- Clean, professional interface suitable for business use
+- Accessibility compliance for inclusive design
+</context>
+<PRD>
+# Technical Architecture  
+## System Components
+- **Frontend**: Next.js 14 with TypeScript, React 18, Tailwind CSS
+- **Backend**: Next.js API routes with Prisma ORM
+- **Database**: PostgreSQL with Prisma migrations
+- **Authentication**: NextAuth.js with multiple providers
+- **File Storage**: Integrated file upload system
+- **Email**: Nodemailer for notifications
+- **UI Components**: Radix UI primitives with custom styling
+
+## Data Models
+- **User**: Multi-role user management with authentication
+- **Project**: Core project entity with status, budget, timeline
+- **Task**: Project tasks with assignment and tracking
+- **Team**: Team management with member roles
+- **Invoice**: Financial management with payment tracking
+- **Message**: Communication system with threading
+- **File**: Document management and storage
+- **Proposal**: Client proposal management
+
+## APIs and Integrations
+- RESTful API routes for all CRUD operations
+- NextAuth integration for authentication
+- File upload API with type validation
+- Email notification system
+- Payment processing integration (future)
+- Analytics and reporting APIs
+
+## Infrastructure Requirements
+- PostgreSQL database hosting
+- File storage solution (local or cloud)
+- Email service provider
+- Production deployment platform (Vercel/AWS)
+- SSL certificate for security
+- Backup and recovery systems
+
+# Development Roadmap  
+## Phase 1: Foundation & Core Features (MVP)
+- Complete authentication system with role-based access
+- Basic user management and profile functionality
+- Core project creation and management
+- Simple task assignment and tracking
+- Basic team management
+- Essential client portal features
+- File upload and management system
+- Basic messaging between users
+
+## Phase 2: Enhanced Project Management
+- Advanced project tracking with milestones
+- Comprehensive task management with dependencies
+- Team collaboration features
+- Project analytics and reporting
+- Enhanced file management with versioning
+- Project templates and workflows
+- Time tracking and productivity metrics
+
+## Phase 3: Financial Management & Billing
+- Complete invoice generation and management
+- Payment processing integration
+- Budget tracking and financial reporting
+- Proposal management system
+- Client billing portal
+- Financial analytics and insights
+- Automated payment reminders
+
+## Phase 4: Advanced Features & Optimization
+- Advanced analytics and business intelligence
+- Custom dashboard widgets
+- Advanced reporting and exports
+- Mobile app development
+- API integrations with third-party tools
+- Performance optimization and scaling
+- Advanced security features
+
+## Phase 5: Enterprise Features
+- Multi-tenant architecture
+- Advanced role-based permissions
+- Workflow automation
+- Advanced integrations (CRM, accounting software)
+- White-label solutions
+- Advanced analytics and AI features
+
+# Logical Dependency Chain
+## Foundation First (Phase 1)
+1. **Authentication System**: Must be built first as all other features depend on user identity
+2. **User Management**: Required for all role-based features
+3. **Basic Project Management**: Core entity that everything else builds upon
+4. **Simple Task System**: Basic task assignment and tracking
+5. **Team Management**: Required for project collaboration
+6. **File Management**: Essential for project documentation
+7. **Basic Messaging**: Core communication feature
+
+## Building Upon Foundation (Phase 2)
+1. **Enhanced Project Features**: Add to existing project system
+2. **Advanced Task Management**: Build upon basic task system
+3. **Team Collaboration**: Enhance existing team features
+4. **Analytics**: Add reporting to existing data
+5. **Project Templates**: Build upon project creation system
+
+## Financial Layer (Phase 3)
+1. **Invoice System**: New financial entity
+2. **Payment Processing**: Integrate with invoice system
+3. **Budget Tracking**: Enhance project financial features
+4. **Proposal Management**: New client-facing feature
+5. **Financial Reporting**: Analytics on financial data
+
+## Enhancement Layer (Phase 4-5)
+1. **Advanced Analytics**: Build upon existing data
+2. **Mobile App**: New interface layer
+3. **Integrations**: Connect with external systems
+4. **Enterprise Features**: Scale existing features
+
+# Risks and Mitigations  
+## Technical Challenges
+- **Database Performance**: Implement proper indexing and query optimization
+- **File Storage Scalability**: Plan for cloud storage migration
+- **Real-time Features**: Implement WebSocket or polling for updates
+- **Security Vulnerabilities**: Regular security audits and updates
+
+## MVP Scope Management
+- **Feature Creep**: Strictly prioritize MVP features
+- **Complexity Management**: Start simple, iterate based on feedback
+- **User Adoption**: Focus on core value proposition first
+- **Performance**: Optimize for speed and reliability
+
+## Resource Constraints
+- **Development Time**: Agile development with clear milestones
+- **Technical Debt**: Regular refactoring and code reviews
+- **Testing Coverage**: Implement comprehensive testing strategy
+- **Documentation**: Maintain up-to-date technical documentation
+
+# Appendix  
+## Research Findings
+- Agencies need unified project management solutions
+- Role-based access is critical for security and usability
+- Financial tracking is a key pain point for agencies
+- Client communication should be integrated, not separate
+- Mobile access is increasingly important
+
+## Technical Specifications
+- Next.js 14 with App Router
+- TypeScript for type safety
+- Prisma ORM with PostgreSQL
+- Tailwind CSS for styling
+- Radix UI for accessible components
+- NextAuth for authentication
+- Nodemailer for email notifications
+- Recharts for data visualization
+</PRD>

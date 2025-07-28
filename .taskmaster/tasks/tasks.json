@@ -1,0 +1,225 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Complete Authentication System",
+        "description": "Finish implementing the NextAuth authentication system with role-based access control for all user types (Client, Team Member, Project Manager, Admin)",
+        "details": "Implement complete authentication flow including sign-in, sign-out, session management, and role-based redirects. Ensure all dashboard routes are properly protected based on user roles.",
+        "status": "done",
+        "priority": "high",
+        "dependencies": [],
+        "testStrategy": "Test authentication flow for all user roles, verify session persistence, test role-based access control, and ensure secure redirects.",
+        "subtasks": []
+      },
+      {
+        "id": 2,
+        "title": "Enhance User Management",
+        "description": "Complete user profile management, role assignment, and user administration features",
+        "details": "Build comprehensive user management including profile editing, role management, user search, and admin user management interface. Implement user creation, editing, and deletion workflows.",
+        "status": "pending",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "testStrategy": "Test user creation, editing, role assignment, and deletion. Verify admin permissions and user search functionality.",
+        "subtasks": []
+      },
+      {
+        "id": 3,
+        "title": "Complete Project Management System",
+        "description": "Finish the core project management features including project creation, editing, status tracking, and project assignment",
+        "details": "Implement full CRUD operations for projects, project status management, team assignment, budget tracking, and project timeline features. Add project templates and workflow management.",
+        "status": "pending",
+        "priority": "high",
+        "dependencies": [
+          1,
+          2
+        ],
+        "testStrategy": "Test project creation, editing, status updates, team assignment, and project search functionality.",
+        "subtasks": []
+      },
+      {
+        "id": 4,
+        "title": "Implement Task Management",
+        "description": "Build comprehensive task assignment, tracking, and management system within projects",
+        "details": "Create task creation, assignment, status tracking, priority management, and task dependencies. Implement task comments, file attachments, and progress tracking.",
+        "status": "pending",
+        "priority": "high",
+        "dependencies": [
+          3
+        ],
+        "testStrategy": "Test task creation, assignment, status updates, priority changes, and task dependencies.",
+        "subtasks": []
+      },
+      {
+        "id": 5,
+        "title": "Enhance Team Management",
+        "description": "Complete team creation, member management, and team collaboration features",
+        "details": "Implement team creation, member invitation, role assignment within teams, team performance tracking, and team-based project assignment.",
+        "status": "pending",
+        "priority": "medium",
+        "dependencies": [
+          2,
+          3
+        ],
+        "testStrategy": "Test team creation, member management, role assignment, and team-based project access.",
+        "subtasks": []
+      },
+      {
+        "id": 6,
+        "title": "Implement File Management System",
+        "description": "Build comprehensive file upload, storage, and management system for projects",
+        "details": "Create file upload functionality, file organization by project, file versioning, file sharing, and file access controls. Implement file preview and download features.",
+        "status": "pending",
+        "priority": "medium",
+        "dependencies": [
+          3
+        ],
+        "testStrategy": "Test file upload, organization, sharing, and access controls for different user roles.",
+        "subtasks": []
+      },
+      {
+        "id": 7,
+        "title": "Complete Messaging System",
+        "description": "Finish the internal messaging and communication system between users",
+        "details": "Implement message threading, reply functionality, read/unread status, message priority, and real-time notifications. Add message search and filtering capabilities.",
+        "status": "pending",
+        "priority": "medium",
+        "dependencies": [
+          1,
+          2
+        ],
+        "testStrategy": "Test message sending, threading, notifications, and search functionality.",
+        "subtasks": []
+      },
+      {
+        "id": 8,
+        "title": "Implement Invoice Management",
+        "description": "Build complete invoice generation, management, and payment tracking system",
+        "details": "Create invoice generation, invoice status tracking, payment processing integration, receipt management, and financial reporting. Implement automated payment reminders.",
+        "status": "pending",
+        "priority": "medium",
+        "dependencies": [
+          3
+        ],
+        "testStrategy": "Test invoice creation, status updates, payment tracking, and financial reporting.",
+        "subtasks": []
+      },
+      {
+        "id": 9,
+        "title": "Build Client Portal",
+        "description": "Create comprehensive client-facing portal with project visibility and communication",
+        "details": "Implement client dashboard, project visibility, client-specific messaging, invoice viewing, and proposal management. Add client feedback and approval workflows.",
+        "status": "pending",
+        "priority": "medium",
+        "dependencies": [
+          3,
+          7,
+          8
+        ],
+        "testStrategy": "Test client portal access, project visibility, communication, and invoice viewing.",
+        "subtasks": []
+      },
+      {
+        "id": 10,
+        "title": "Implement Analytics and Reporting",
+        "description": "Build comprehensive analytics and reporting system for projects, teams, and finances",
+        "details": "Create project performance metrics, team productivity analytics, financial reporting, and custom dashboard widgets. Implement data visualization and export capabilities.",
+        "status": "pending",
+        "priority": "low",
+        "dependencies": [
+          3,
+          4,
+          5,
+          8
+        ],
+        "testStrategy": "Test analytics generation, data accuracy, and reporting functionality.",
+        "subtasks": []
+      },
+      {
+        "id": 11,
+        "title": "Add Proposal Management",
+        "description": "Implement proposal creation, management, and client approval workflow",
+        "details": "Create proposal templates, proposal generation, client approval workflow, and proposal tracking. Implement proposal-to-project conversion.",
+        "status": "pending",
+        "priority": "low",
+        "dependencies": [
+          3,
+          9
+        ],
+        "testStrategy": "Test proposal creation, client approval, and conversion to projects.",
+        "subtasks": []
+      },
+      {
+        "id": 12,
+        "title": "Implement Advanced Project Features",
+        "description": "Add advanced project management features like milestones, dependencies, and templates",
+        "details": "Implement project milestones, task dependencies, project templates, workflow automation, and advanced project analytics.",
+        "status": "pending",
+        "priority": "low",
+        "dependencies": [
+          3,
+          4
+        ],
+        "testStrategy": "Test milestone tracking, dependencies, templates, and workflow automation.",
+        "subtasks": []
+      },
+      {
+        "id": 13,
+        "title": "Add Real-time Notifications",
+        "description": "Implement real-time notifications for project updates, messages, and system events",
+        "details": "Create real-time notification system using WebSockets or polling, notification preferences, and notification history. Implement email notifications.",
+        "status": "pending",
+        "priority": "low",
+        "dependencies": [
+          7
+        ],
+        "testStrategy": "Test real-time notifications, notification preferences, and email delivery.",
+        "subtasks": []
+      },
+      {
+        "id": 14,
+        "title": "Implement Advanced Security Features",
+        "description": "Add advanced security features like audit logging, data encryption, and access controls",
+        "details": "Implement audit logging, data encryption, advanced access controls, session management, and security monitoring.",
+        "status": "pending",
+        "priority": "low",
+        "dependencies": [
+          1
+        ],
+        "testStrategy": "Test audit logging, encryption, access controls, and security monitoring.",
+        "subtasks": []
+      },
+      {
+        "id": 15,
+        "title": "Performance Optimization and Scaling",
+        "description": "Optimize application performance and prepare for scaling",
+        "details": "Implement database optimization, caching strategies, code splitting, lazy loading, and performance monitoring. Prepare for production deployment.",
+        "status": "pending",
+        "priority": "low",
+        "dependencies": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "testStrategy": "Test performance improvements, caching effectiveness, and scalability.",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "version": "1.0.0",
+      "createdAt": "2024-12-19T10:00:00Z",
+      "lastUpdated": "2024-12-19T10:00:00Z",
+      "totalTasks": 15,
+      "pendingTasks": 14,
+      "completedTasks": 1
+    }
+  }
+}

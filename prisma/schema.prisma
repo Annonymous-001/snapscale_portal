@@ -193,6 +193,9 @@ model User {
   role                            Role         @default(CLIENT)
   isActive                        Boolean      @default(true)
   lastLoginAt                     DateTime?
+  lastLoginIP                     String?     
+  lastLoginCity                   String?     // new
+  lastLoginCountry                String? 
   emailVerified                   DateTime?
   avatar                          String?
   phone                           String?
